@@ -1,0 +1,14 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Entregable 3: ejecutar y verificar dos veces",
+      "type": "process",
+      "command": "bash",
+      "args": ["${workspaceFolder}/modulo_4/verificar.sh"],
+      "group": {"kind": "test", "isDefault": true},
+      "problemMatcher": [],
+      "presentation": {"reveal": "always", "panel": "dedicated", "clear": true}
+    }
+  ]
+}

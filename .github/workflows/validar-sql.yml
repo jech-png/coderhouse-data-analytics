@@ -1,0 +1,45 @@
+name: Validar SQL Server
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "modulo_4/**"
+      - ".devcontainer/**"
+      - ".github/workflows/validar-sql.yml"
+  pull_request:
+    paths:
+      - "modulo_4/**"
+      - ".devcontainer/**"
+      - ".github/workflows/validar-sql.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verificar:
+    name: SQL Server - dos ejecuciones
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Preparar contraseña local temporal
+        run: bash .devcontainer/initialize.sh
+      - name: Construir e iniciar el entorno de Codespaces
+        run: docker compose -f .devcontainer/compose.yaml up -d --build --wait --wait-timeout 300
+      - name: Ejecutar dos veces y validar los datos
+        run: docker compose -f .devcontainer/compose.yaml exec -T workspace bash modulo_4/verificar.sh
+      - name: Guardar evidencia de las ejecuciones
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: validacion-sql-server
+          path: modulo_4/resultados/
+          if-no-files-found: warn
+      - name: Mostrar diagnóstico si falla
+        if: failure()
+        run: docker compose -f .devcontainer/compose.yaml logs --no-color db
+      - name: Detener el entorno temporal
+        if: always()
+        run: docker compose -f .devcontainer/compose.yaml down -v
