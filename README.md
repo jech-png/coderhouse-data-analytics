@@ -2,6 +2,16 @@
 
 Proyecto del curso de Data Analytics.
 
+## RetailPro — Entregable 4: Consultas SQL de negocio
+
+[`RetailPro/m4_consultas_negocio.sql`](RetailPro/m4_consultas_negocio.sql) contiene
+el resumen mensual, el top 5 de productos, los clientes recurrentes y la
+comparación con el promedio mensual, más tres hallazgos basados en los datos.
+
+El archivo usa `EXTRACT` y `LIMIT`, como pide la consigna. Se incluye una versión
+compatible con el SQL Server del Codespace y una tarea para ejecutarla.
+[Instrucciones y resultados esperados](RetailPro/README.md).
+
 ## Módulo 4 — Entregable 3
 
 [`modulo_4/ventas_tech_db.sql`](modulo_4/ventas_tech_db.sql) crea y carga

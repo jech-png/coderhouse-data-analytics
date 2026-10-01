@@ -5,11 +5,13 @@ on:
     branches: [main]
     paths:
       - "modulo_4/**"
+      - "RetailPro/**"
       - ".devcontainer/**"
       - ".github/workflows/validar-sql.yml"
   pull_request:
     paths:
       - "modulo_4/**"
+      - "RetailPro/**"
       - ".devcontainer/**"
       - ".github/workflows/validar-sql.yml"
   workflow_dispatch:
@@ -30,6 +32,8 @@ jobs:
         run: docker compose -f .devcontainer/compose.yaml up -d --build --wait --wait-timeout 300
       - name: Ejecutar dos veces y validar los datos
         run: docker compose -f .devcontainer/compose.yaml exec -T workspace bash modulo_4/verificar.sh
+      - name: Ejecutar las cuatro consultas RetailPro en SQL Server
+        run: docker compose -f .devcontainer/compose.yaml exec -T workspace bash RetailPro/ejecutar_sqlserver.sh
       - name: Guardar evidencia de las ejecuciones
         if: always()
         uses: actions/upload-artifact@v4
@@ -43,3 +47,47 @@ jobs:
       - name: Detener el entorno temporal
         if: always()
         run: docker compose -f .devcontainer/compose.yaml down -v
+
+  consultas-postgresql:
+    name: RetailPro - consultas con EXTRACT
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: retailpro
+          POSTGRES_PASSWORD: retailpro_ci_temporal
+          POSTGRES_DB: Ventas_Tech_DB
+        options: >-
+          --health-cmd "pg_isready -U retailpro -d Ventas_Tech_DB"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Preparar ventas originales en una base temporal
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          origen = Path('modulo_4/ventas_tech_db.sql').read_text(encoding='utf-8-sig')
+          insercion = re.search(r'INSERT INTO dbo\.ventas\s*\([^;]+?;', origen, re.S)
+          if insercion is None:
+              raise SystemExit('No se encontró la carga original de ventas.')
+          esquema = '''CREATE TABLE ventas (
+              id_venta INT PRIMARY KEY, id_cliente INT, id_producto INT,
+              cantidad INT NOT NULL, precio_unitario DECIMAL(10,2) NOT NULL,
+              fecha_venta DATE NOT NULL
+          );\n'''
+          Path('/tmp/retailpro_ventas.sql').write_text(
+              esquema + insercion.group(0).replace('dbo.ventas', 'ventas'))
+          PY
+          docker exec -i "${{ job.services.postgres.id }}" \
+            psql -U retailpro -d Ventas_Tech_DB -v ON_ERROR_STOP=1 \
+            < /tmp/retailpro_ventas.sql
+      - name: Ejecutar el archivo entregable sin modificar su sintaxis
+        run: |
+          docker exec -i "${{ job.services.postgres.id }}" \
+            psql -U retailpro -d Ventas_Tech_DB -v ON_ERROR_STOP=1 \
+            < RetailPro/m4_consultas_negocio.sql

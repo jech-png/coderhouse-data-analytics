@@ -9,6 +9,14 @@
       "group": {"kind": "test", "isDefault": true},
       "problemMatcher": [],
       "presentation": {"reveal": "always", "panel": "dedicated", "clear": true}
+    },
+    {
+      "label": "Entregable 4: ejecutar consultas de negocio",
+      "type": "process",
+      "command": "bash",
+      "args": ["${workspaceFolder}/RetailPro/ejecutar_sqlserver.sh"],
+      "problemMatcher": [],
+      "presentation": {"reveal": "always", "panel": "dedicated", "clear": true}
     }
   ]
 }
