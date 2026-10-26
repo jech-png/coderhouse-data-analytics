@@ -34,6 +34,14 @@ jobs:
         run: docker compose -f .devcontainer/compose.yaml exec -T workspace bash modulo_4/verificar.sh
       - name: Ejecutar las cuatro consultas RetailPro en SQL Server
         run: docker compose -f .devcontainer/compose.yaml exec -T workspace bash RetailPro/ejecutar_sqlserver.sh
+      - name: Ejecutar las cuatro consultas M5 en SQL Server
+        run: |
+          docker compose -f .devcontainer/compose.yaml exec -T workspace bash -c '
+            set -euo pipefail
+            sqlcmd -S localhost -U sa -C -b -l 10 -t 60 -f 65001 \
+              -d Ventas_Tech_DB -i RetailPro/m5_consultas_joins.sql \
+              | tee modulo_4/resultados/consultas_m5.txt
+          '
       - name: Guardar evidencia de las ejecuciones
         if: always()
         uses: actions/upload-artifact@v4
